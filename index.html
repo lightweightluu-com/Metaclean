@@ -3,22 +3,108 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#14532d" />
-    <meta name="description" content="Eine PWA auf lightweightluu.com" />
+    <meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#131417" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Entfernt Autor, Firma, Kommentare, Änderungsverlauf und andere Metadaten aus Word- und PDF-Dateien – direkt auf dem Gerät, ohne Upload." />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Metaclean" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Neue App</title>
+    <title>Metaclean</title>
   </head>
   <body>
+    <a class="skip" href="#pick">Zur Dateiauswahl springen</a>
+
+    <header class="top">
+      <span class="brand">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22"><use href="#i-doc" /></svg>
+        Metaclean
+      </span>
+      <span class="net" id="net" role="status">Läuft auf diesem Gerät</span>
+    </header>
+
     <main class="shell">
-      <p class="eyebrow">lightweightluu.com</p>
-      <h1>Bereit zum Bauen.</h1>
-      <p class="lead">
-        Dieses Repo wurde aus <code>pwa-template</code> erstellt. Jeder Push auf
-        <code>main</code> geht automatisch live.
-      </p>
-      <p class="status" id="status">Prüfe Offline-Fähigkeit …</p>
+      <section class="intro" aria-labelledby="title">
+        <h1 id="title">Metadaten aus Word und PDF entfernen</h1>
+        <p class="lead">
+          Autor, Firma, Kommentare, Änderungsverlauf, Zeitstempel und Bilddaten werden gelöscht.
+          Die Datei wird nur auf diesem Gerät verarbeitet – kein Upload, nichts wird gespeichert.
+        </p>
+      </section>
+
+      <label class="drop" id="drop" for="pick">
+        <input id="pick" type="file" multiple
+          accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        <span class="drop-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28"><use href="#i-up" /></svg>
+        </span>
+        <span class="drop-cta">Datei auswählen</span>
+        <span class="drop-hint"><span class="hover-only">oder hierher ziehen · </span>.docx und .pdf</span>
+      </label>
+
+      <section class="results" id="results-wrap" hidden aria-labelledby="results-title">
+        <div class="results-head">
+          <h2 id="results-title">Bereinigte Dateien</h2>
+          <button class="ghost" type="button" id="clear">Liste leeren</button>
+        </div>
+        <ol class="cards" id="results" aria-live="polite"></ol>
+      </section>
+
+      <details class="info">
+        <summary>Was wird entfernt – und was nicht?</summary>
+        <div class="info-body">
+          <h3>Word (.docx)</h3>
+          <ul>
+            <li>Dokumenteigenschaften: Autor, zuletzt geändert von, Firma, Manager, Titel, Stichwörter, eigene Felder</li>
+            <li>Erstell-, Änderungs- und Druckdatum, Bearbeitungszeit, Revisionsnummer, Programmversion</li>
+            <li>Kommentare samt Namen der Kommentierenden</li>
+            <li>Änderungsverfolgung: Änderungen werden angenommen, Namen und Zeitpunkte gelöscht</li>
+            <li>Vorlagenpfad (enthält oft den Windows-Benutzernamen), Bearbeitungs-IDs, Dokumentvariablen, SharePoint-Daten</li>
+            <li>Vorschaubild und Kamera-/GPS-Daten in eingefügten Fotos</li>
+          </ul>
+          <h3>PDF</h3>
+          <ul>
+            <li>Dokumentinfo: Autor, Titel, Betreff, Stichwörter, Programm, Erstell- und Änderungsdatum</li>
+            <li>XMP-Metadaten auf allen Ebenen und private Programmdaten (z. B. InDesign, Illustrator)</li>
+            <li>Autoren und Zeitpunkte von Anmerkungen</li>
+            <li>Frühere Bearbeitungsstände, die beim Speichern im PDF hängen bleiben</li>
+            <li>Dokument-ID und Kamera-/GPS-Daten in Fotos</li>
+          </ul>
+          <h3>Bleibt erhalten</h3>
+          <p>Der sichtbare Inhalt. Namen, die im Text, in Kopf-/Fusszeilen oder im Dateinamen stehen, musst du selbst prüfen. Alte .doc-Dateien bitte zuerst in Word als .docx speichern.</p>
+        </div>
+      </details>
     </main>
+
+    <footer class="foot">
+      Kein Upload · keine Cookies · kein Tracking. Funktioniert auch offline.
+    </footer>
+
+    <template id="card-tpl">
+      <li class="card" data-state="working">
+        <div class="card-head">
+          <span class="badge"></span>
+          <div class="card-title">
+            <p class="name"></p>
+            <p class="meta"></p>
+          </div>
+        </div>
+        <div class="card-body"></div>
+      </li>
+    </template>
+
+    <svg class="sprite" width="0" height="0" aria-hidden="true">
+      <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v5h5M9 14l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4zM12 10v4.5m0 2.6v.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="m9 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3m0 0L8 7m4-4 4 4M7 10H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </svg>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

@@ -1,13 +1,36 @@
-# pwa-template
+# Metaclean
 
-Vorlage für PWAs, die automatisch auf `<repo-name>.lightweightluu.com` live gehen.
+Entfernt Metadaten aus Word- (.docx) und PDF-Dateien – vollständig im Browser.
+Dokument rein, Metadaten weg, Dokument raus. Nichts wird hochgeladen oder gespeichert.
 
-## Neues Projekt starten
-1. Auf GitHub **„Use this template“ → Create a new repository** (Owner: `lightweightluu-com`).
-2. Repo-Name = Subdomain, z.B. `rezepte` → `rezepte.lightweightluu.com`.
-   Nur Kleinbuchstaben, Zahlen und Bindestriche verwenden.
-3. Repo in Claude Code öffnen und beschreiben, was gebaut werden soll.
-4. Jeder Push auf `main` deployt automatisch. Die URL steht in der Zusammenfassung des Actions-Laufs.
+Live: **https://metaclean.lightweightluu.com** (Repo-Name = Subdomain)
+
+## Datenschutz
+- Verarbeitung nur im Arbeitsspeicher des Browser-Tabs.
+- Content-Security-Policy mit `connect-src 'none'`: Die Seite kann technisch keine Daten senden.
+- Keine Cookies, kein localStorage/IndexedDB, kein Tracking, kein Backend.
+- Funktioniert offline (Service Worker cacht nur den App-Code, nie Dateien).
+
+## Was entfernt wird
+**Word:** Dokumenteigenschaften (Autor, Firma, Manager, Titel, Stichwörter, eigene Felder, Daten,
+Bearbeitungszeit, Programm), Kommentare samt Autoren, Änderungsverfolgung (wird angenommen),
+rsid-Bearbeitungs-IDs, Vorlagenpfad, Dokument-IDs, Dokumentvariablen, customXml/SharePoint-Daten,
+Vorschaubild, EXIF/GPS in Bildern, ZIP-Zeitstempel. Setzt zudem «Persönliche Informationen beim
+Speichern entfernen» in Word.
+
+**PDF:** Info-Dictionary, XMP auf allen Ebenen, PieceInfo, Dokument-ID, Autoren/Daten in
+Anmerkungen, Daten von Anhängen, EXIF in JPEG-Bildern, frühere Bearbeitungsstände (inkrementelle
+Updates) und unbenutzte Objekte.
+
+## Nicht unterstützt (noch)
+Alte `.doc`, verschlüsselte PDFs, Excel/PowerPoint. Eingebettete Objekte und PDF-Anhänge werden
+nicht rekursiv bereinigt (die App weist darauf hin).
+
+## Aufbau
+- `src/strip/docx.js` – Word-Bereinigung (JSZip + DOMParser)
+- `src/strip/pdf.js` – PDF-Bereinigung (pdf-lib)
+- `src/strip/images.js` – EXIF/XMP/Text-Chunks aus JPEG/PNG
+- `src/main.js` – Oberfläche (Download am PC, Teilen-Menü auf iPhone)
 
 ## Lokal
 ```bash
@@ -15,7 +38,6 @@ npm install
 npm run dev
 ```
 
-## Voraussetzungen (einmalig, bereits erledigt)
-- Org-Secrets `CLOUDFLARE_API_TOKEN` und `CLOUDFLARE_ACCOUNT_ID` für alle Repos.
-- Zone `lightweightluu.com` in Cloudflare.
-- Für die gewünschte Subdomain darf noch kein DNS-Eintrag existieren.
+## Installieren
+- **Windows:** in Edge/Chrome öffnen → Symbol «App installieren» in der Adressleiste.
+- **iPhone:** in Safari öffnen → Teilen → «Zum Home-Bildschirm».
