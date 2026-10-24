@@ -1,0 +1,74 @@
+name: Deploy
+
+# Baut die App und deployt sie als Cloudflare Worker (Static Assets)
+# auf <repo-name>.lightweightluu.com. DNS und Zertifikat legt Cloudflare
+# beim ersten Deploy automatisch an (Custom Domain).
+#
+# Benötigte Secrets (in der Org lightweightluu-com für alle Repos gesetzt):
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Abhängigkeiten installieren
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Subdomain aus Repo-Namen ableiten
+        id: name
+        run: |
+          NAME=$(echo "${{ github.event.repository.name }}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -e 's/[^a-z0-9-]/-/g' -e 's/--*/-/g' -e 's/^-//' -e 's/-$//' \
+            | cut -c1-63)
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Deploy-Ziel: https://$NAME.lightweightluu.com"
+
+      - name: Wrangler-Config erzeugen
+        run: |
+          cat > wrangler.jsonc <<EOF
+          {
+            "name": "${{ steps.name.outputs.name }}",
+            "compatibility_date": "2026-09-01",
+            "assets": {
+              "directory": "./dist",
+              "not_found_handling": "single-page-application"
+            },
+            "routes": [
+              { "pattern": "${{ steps.name.outputs.name }}.lightweightluu.com", "custom_domain": true }
+            ]
+          }
+          EOF
+
+      - name: Deploy zu Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          # Ohne diese Zeile installiert die Action ein altes Wrangler (3.90.0), das
+          # Static-Assets-Deploys ohne `main` ablehnt ("Missing entry-point").
+          wranglerVersion: '4'
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Zusammenfassung
+        run: |
+          echo "### Live: https://${{ steps.name.outputs.name }}.lightweightluu.com" >> "$GITHUB_STEP_SUMMARY"
